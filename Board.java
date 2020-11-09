@@ -173,15 +173,8 @@ public class Board{
         count++;
       }
     }
-    for(int i = 0; i < N; i++){
-      for(int j = 0; j < N; j++){
-        System.out.print(visited[(N-i-1)*N+j]+" ");
-      }
-      System.out.println();
-    }
 
     //Here comes the "randomness"
-
 
 
     //I must be careful with the edges which already have 2 walls
