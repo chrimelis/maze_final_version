@@ -7,6 +7,6 @@ Dpt. of Electrical and Computer Engineering,
 Polytechnic School, Aristotle University of Thessaloniki.
 
 The content creators:
-Group 100
-Ioannis Kallimanis
+Group 100:
+Ioannis Kallimanis,
 Christos Melissaris
