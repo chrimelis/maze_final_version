@@ -40,12 +40,11 @@ public class Game {
   public static int checkGameOver(int S, Player p1, Player p2){
     int p1Tile = p1.getPlayerTile();
     int p2Tile = p2.getPlayerTile();
-
-    if(p1Tile == p2Tile){
-      return -1;  //Minotaurus has won
-    }
     if(p1.getScore() == S || p2.getScore() == S){
       return 1; //  Theseus has won
+    }
+    if(p1Tile == p2Tile){
+      return -1;  //Minotaurus has won
     }
     return 0; //nobody won
   }
@@ -93,17 +92,17 @@ public class Game {
           System.out.println("Team 100 welcomes you to...\n");
        }
       else if(i == 3){
-         System.out.println("\"A night in the musuem\"\n");
+         System.out.println("\"A night in the musuem!\"\n");
       }
       else if(i == 5){
        System.out.println("The content creators:");
       }
       else if(i == 6){
-      System.out.println("John Kallimanis");
+      System.out.println("Ioannis Kallimanis");
       System.out.println("Christos Melissaris");
       }
      try {
-        // thread to sleep for 1000 milliseconds
+        // thread to sleep for x milliseconds
         if(i == 2 || i == 3)
           Thread.sleep(2000);
         else if(i == 0 || i == 1)
@@ -122,18 +121,22 @@ public class Game {
   }
 
   public static void main(String[] args){
+    //create a new Game
     Game g = new Game();
-    // g.credits();
+    //show credits
+    g.credits();
 
-    int n = 100;  //turns per player
+    int n = 100;  //turns per player at max
 
     int N = 15;
     int S = 4;
-    int W = 254; //always less than N*N + 2*N -2 AND greater or equal to 4*N - 1
+    int W = 236; //always less than N*N + 2*N - 1 AND greater or equal to 4*N - 1
 
+    //create a new Board
     Board b = new Board(N,S,W);
     b.createBoard();
 
+    //Create the 2 players
     Player p1 = new Player(0, "Theseus", b, 0, 0, 0);
 
     Player p2 = new Player(1, "Minotaurus", b, 0, div(N,2), div(N,2));

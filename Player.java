@@ -158,7 +158,6 @@ public class Player{
             moveInfo[3] = -2; //Minotaurus characteristic value
           }
           if(getPlayerId() == 0 && supId >= 0){
-            //Note that the removal of the supply from the tile will be handled from the game as well
             score += 1;
             System.out.println(name + " collected supply with id " + (supId+1)+" !");
           }
@@ -177,12 +176,7 @@ public class Player{
         }
       break;
       case 5:
-        if(!board.getTile(playerTile).getDown()){
-          if(x == 0){
-            break;
-          }
-
-
+        if(!board.getTile(playerTile).getDown() && x!=0){
 
           moveInfo[1] = x-1;
           moveInfo[2] = y;

@@ -1,3 +1,5 @@
+import java.util.Arrays; //for sorting an array
+
 public class Board{
   private int N;
   private int S;
@@ -116,6 +118,15 @@ public class Board{
     int count = 0;  //how many walls have I placed?
     // count <= W
 
+    // for every tile we store how many times we have accessed it for wall placing
+    //we will put 1 or 2
+    //0 means no walls placed
+    //1 means checked once
+    //2 twice
+    //if checked twice continue
+    //if count is close to W = N*N-2N-2 then find only those who have been visited 0 or 1 time
+    int[] visited = new int[N*N];
+
     for(int i = 0; i < N*N; i++){
       tiles[i].setTileId(i);
 
@@ -124,35 +135,53 @@ public class Board{
 
       //Now the only task left to complete the board is to set the walls
       //start_wall_strategy
-
+      visited[i] = 0;
 
 
       //the 4 successive if-statements set a wall around the maze
       if(tiles[i].getX() == 0){
         tiles[i].setDown(true);
+        visited[i] = 1;
         count++;
         //Special case::The entrance of the maze according to image1
         if(i == 0){
           tiles[i].setDown(false);
+          visited[i] = 1;
           count--;
         }
 
       }
       if(tiles[i].getX() == (N -1)){
         tiles[i].setUp(true);
+        visited[i] = 1;
         count++;
       }
       if(tiles[i].getY() == 0){
         tiles[i].setLeft(true);
+        visited[i] = 1;
+        if(tiles[i].getX() == N -1){
+          visited[i] = 2;
+        }
         count++;
       }
       if(tiles[i].getY() == (N-1)){
         tiles[i].setRight(true);
+        visited[i] = 1;
+        if(tiles[i].getX() == (N-1) || tiles[i].getX() == 0){
+          visited[i] = 2;
+        }
         count++;
       }
     }
+    for(int i = 0; i < N; i++){
+      for(int j = 0; j < N; j++){
+        System.out.print(visited[(N-i-1)*N+j]+" ");
+      }
+      System.out.println();
+    }
 
     //Here comes the "randomness"
+
 
 
     //I must be careful with the edges which already have 2 walls
@@ -161,57 +190,69 @@ public class Board{
     while(count < W){
       int temp = (int) (Math.random()*101*N*N);
       int randomId = Game.mod(temp, N*N);
-      int randX = tiles[randomId].getX();
-      int randY = tiles[randomId].getY();
+      int randX = tiles[randomId].getX(); // x coord of tile with randomId
+      int randY = tiles[randomId].getY(); //y coord of tile with randomId
       //Every tile has a maximum of 4 neighboor tiles(up, down, left, right)
 
+      //follow this strategy only after placing lots of walls
+      if(count >= N*N){ //because chances that we hit an available tile are small
+
+        int[] seq = findAvailableTiles(visited); //holds all tileIds with less than 2 walls
+
+        int[] order = randomSeq(seq.length);  //the order in which I will try to place walls in the tiles that are available
+
+        //loop over availableTiles could be done with a random permutation of the set {0, 1,...,seq.length}
+        for(int i = 0; i < seq.length; i++){
+
+          //for the definition-implementation of randomSeq watch below(extra methods of class Board)
+          int[] dice = randomSeq(4); //array holding a random permutation of the set {0,1,2,3}
+          for(int j = 0; j < 4; j++){
+            if(tryWallPos(seq[order[i]], dice[j])){
+              int tempX = tiles[seq[order[i]]].getX();
+              int tempY = tiles[seq[order[i]]].getY();
+              visited[seq[order[i]]]++;
+              switch(dice[j]){
+                case 0: visited[(tempX+1)*N + tempY]++; break;
+                case 1: visited[(tempX-1)*N + tempY]++; break;
+                case 2: visited[tempX*N + tempY-1]++; break;
+                case 3: visited[tempX*N + tempY+1]++; break;
+              }
+              //increment counter
+              count++;
+              break;
+
+            }
+          }
+        }
+      }
       if(!tiles[randomId].has2Walls()){
+        int[] dice = randomSeq(4);
+        for(int i = 0; i < 4; i++){
+          if(tryWallPos(randomId, dice[i])){
+            //if the tile with randomid had more than 2 walls the following would not have been executed
+            //because tryWallPos would return false
 
-        int dice = (int)(Math.random()*101*4);
-        dice = Game.mod(dice, 4);
-
-
-        if(dice == 0 && !tiles[randomId].getUp() && tiles[randomId].closeIsValid(randX + 1, N)){
-          int closeId = (randX + 1)*N + randY;
-          //if the close Tile has less than 2 walls
-          if(!tiles[closeId].has2Walls()){
-            tiles[randomId].setUp(true);
-            tiles[closeId].setDown(true);
+            //update the times we have visited-placed a wall in this tile with randomId
+            visited[randomId]++;
+            //also update the neighbooring tile according to the position we place the wall
+            switch(dice[i]){
+              //note that there is no fear of gooing out of bounds
+              //because tryWallPos would return false if closeId was not valid.
+              case 0: visited[(randX+1)*N + randY]++; break;  //up
+              case 1: visited[(randX-1)*N + randY]++; break;  //down
+              case 2: visited[randX*N + randY-1]++; break;  //left
+              case 3: visited[randX*N+ randY+1]++; break;   //right
+            }
+            //increment counter
             count++;
+            break;
           }
         }
-        else if(dice == 1 && !tiles[randomId].getDown() && tiles[randomId].closeIsValid(randX - 1, N)){
-          int closeId = (randX - 1)*N + randY;
-          //if the close Tile has less than 2 walls
-          if(!tiles[closeId].has2Walls()){
-            tiles[randomId].setDown(true);
-            tiles[closeId].setUp(true);
-            count++;
-          }
-        }
-        else if(dice == 2 && !tiles[randomId].getLeft() && tiles[randomId].closeIsValid(randY - 1, N)){
-          int closeId = randX * N + randY - 1;
-          //if the close Tile has less than 2 walls
-          if(!tiles[closeId].has2Walls()){
-            tiles[randomId].setLeft(true);
-            tiles[closeId].setRight(true);
-            count++;
-          }
-        }
-        else if(dice == 3 && !tiles[randomId].getRight() && tiles[randomId].closeIsValid(randY + 1, N)){
-          int closeId = randX * N + randY + 1;
-          //if the close Tile has less than 2 walls
-          if(!tiles[closeId].has2Walls()){
-            tiles[randomId].setRight(true);
-            tiles[closeId].setLeft(true);
-            count++;
-          }
-        }
-
       }
     }
-
+    //end of createTile()
   }
+
 
   public void createSupply(){
     //supply id is set for each objecτ of the matrix
@@ -405,5 +446,123 @@ public class Board{
     return count;
   }
 
+  /**
+  @param len  the number of elements of the permutation set {0,1,...,len-1}
+  returns 0,1,...,len-1 in one of the possible ways (len! ways in total)
+  utilizing Math.random()
+  */
+  public int[] randomSeq(int len){
+    int[] seq = new int[len];
+    for(int i = 0; i < len; i++){
+      seq[i] = -1;
+    }
+    int dice;
+    do{
+      dice = (int)(Math.random()*101*len);
+      dice = Game.mod(dice, len);
+      //checks if dice exists as a value in randomSeq
+      //and if it does not it places dice in the next position
+      // that has not yet been occupied by a number in {0,1,2,3}
+      int i;
+      for(i = 0; i < len; i ++){
+        if(seq[i] == dice){
+          break;
+        }
+        else if(seq[i] == -1){
+          seq[i] = dice;
+          break;
+        }
+      }
+      if(seq[len-1] != -1)
+        break;
+    }while(true);
+    return seq;
+  }
 
+  /**
+  @return was the wall placing succesful
+  */
+
+  public boolean tryWallPos(int randomId, int dice){
+    int randX = tiles[randomId].getX();
+    int randY = tiles[randomId].getY();
+    if(!tiles[randomId].has2Walls()){
+
+      if(dice == 0 && !tiles[randomId].getUp() && tiles[randomId].closeIsValid(randX + 1, N)){
+        int closeId = (randX + 1)*N + randY;
+        //if the close Tile has less than 2 walls
+        if(!tiles[closeId].has2Walls()){
+          tiles[randomId].setUp(true);
+          tiles[closeId].setDown(true);
+          return true;
+        }
+      }
+      else if(dice == 1 && !tiles[randomId].getDown() && tiles[randomId].closeIsValid(randX - 1, N)){
+        int closeId = (randX - 1)*N + randY;
+        //if the close Tile has less than 2 walls
+        if(!tiles[closeId].has2Walls()){
+          tiles[randomId].setDown(true);
+          tiles[closeId].setUp(true);
+          return true;
+        }
+      }
+      else if(dice == 2 && !tiles[randomId].getLeft() && tiles[randomId].closeIsValid(randY - 1, N)){
+      int closeId = randX * N + randY - 1;
+        //if the close Tile has less than 2 walls
+        if(!tiles[closeId].has2Walls()){
+          tiles[randomId].setLeft(true);
+          tiles[closeId].setRight(true);
+          return true;
+        }
+      }
+      else if(dice == 3 && !tiles[randomId].getRight() && tiles[randomId].closeIsValid(randY + 1, N)){
+        int closeId = randX * N + randY + 1;
+        //if the close Tile has less than 2 walls
+        if(!tiles[closeId].has2Walls()){
+          tiles[randomId].setRight(true);
+          tiles[closeId].setLeft(true);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+  @return an int array with ids of all available tiles
+  */
+  public int[] findAvailableTiles(int[] visited) {
+    int[] temp = new int[N*N];
+    int count = 0;
+    for(int i = 0; i < N*N; i++){
+      if(visited[i] == 2)
+        continue;
+      temp[i] = i;
+      count++;
+    }
+    //Now we need to copy those elements of temp to the array that will be returned
+    // which will have size count
+
+    //this will be the index of seq
+    int end = 0;
+    int[] seq = new int[count];
+
+    //we collect all initialized elements of temp from the previous loop
+    for(int i = 0; i < N*N; i++){
+      //leave out uninitialized elements of temp
+      if(visited[i] == 2)
+        continue;
+
+      //copy the elements one by one to the new array
+      seq[end] = temp[i];
+      //increment the index in order to give more elements in the next iteration
+      end++;
+      //if we have filled seq with all the ids that we desired exit
+      if(end == count)
+        break;
+    }
+    return seq;
+  }
+
+//end of class Board
 }
