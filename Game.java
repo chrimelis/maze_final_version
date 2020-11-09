@@ -1,5 +1,11 @@
+/*
+	Group 100:
+		Kallimanis Ioannis     10007  6945466230    ikallima@ece.auth.gr
+		Melissaris Christos    9983   6907596710    cpmeliss@ece.auth.gr
+*/
 import java.util.Scanner;  // Import the Scanner class
 import java.lang.*; //for Thread
+
 /**
  * Game
  */
