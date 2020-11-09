@@ -136,7 +136,7 @@ public class Game {
 
     int N = 15;
     int S = 4;
-    int W = 236; //always less than N*N + 2*N - 1 AND greater or equal to 4*N - 1
+    int W = 230; //always less than N*N + 2*N - 1 AND greater or equal to 4*N - 1
 
     //create a new Board
     Board b = new Board(N,S,W);
